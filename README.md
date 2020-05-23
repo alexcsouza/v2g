@@ -55,6 +55,7 @@ TODO: document it
 * Optional removal of temporary generated files
 * Optional frames generation only
 * Optional gif from frames only
+* Optional auto name output (to same original file, whith proper extention)
 * Better documentation
 
 ### Planned for future versions

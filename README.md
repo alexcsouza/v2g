@@ -62,7 +62,7 @@ TODO: document it
 * Optional interactive mode (to remove and add frames and some composing, maybe)
 * Optional framerate configuration
 * Optional subtitles in generated output
-
+* Better output temp files naming and random output naming
 
 
 

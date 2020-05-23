@@ -59,7 +59,7 @@ TODO: document it
 
 ### Planned for future versions
 
-* Optional interactive mode (form fine removal of frames)
+* Optional interactive mode (to remove and add frames and some composing, maybe)
 * Optional framerate configuration
 * Optional subtitles in generated output
 

@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# COLOR CONSTANTS
+START_ERROR_COLOR="\e[38;5;160m"
+START_WARNING_COLOR="\e[38;5;209m"
+START_SUCCESS_COLOR="\e[38;5;119m"
+START_INFO_COLOR="\e[38;5;39m"
+END_COLOR="\e[0m"
+
+# DEFAULT VALUES CONSTANTS
+DEFAULT_TOP_CROP=0
+DEFAULT_RIGHT_CROP=0
+DEFAULT_BOTTOM_CROP=0
+DEFAULT_LEFT_CROP=0
+
+: <<'END'
+usageFunction()
+{
+   echo ""
+   echo "Usage: $0 -a parameterA -b parameterB -c parameterC"
+   echo -e "\t-a Description of what is parameterA"
+   echo -e "\t-b Description of what is parameterB"
+   echo -e "\t-c Description of what is parameterC"
+   exit 1 # Exit script after printing help
+}
+END
+
+outputError(){
+   echo -e $START_ERROR_COLOR"> ERROR:"$END_COLOR" $1"
+}
+
+outputSuccess(){
+   echo -e $START_SUCCESS_COLOR"> SUCESS:"$END_COLOR" $1"
+}
+
+outputWarning(){
+   echo -e $START_WARNING_COLOR"> WARNING:"$END_COLOR" $1"
+}
+
+outputInfo(){
+   echo -e $START_INFO_COLOR"> INFO:"$END_COLOR" $1"
+}
+
+outputParameters(){
+   echo "Start time...(-t): $INPUT_START_TIME"
+   echo "Lenght.......(-l): $INPUT_TIME_LENGHT"
+   echo "Input file...(-i): $INPUT_FILE"
+   echo "Output file..(-o): $OUTPUT_FILE"
+   echo "Width........(-w): $WIDTH"
+   echo "Height.......(-h): $HEIGHT"
+   echo "Crop.........(-c): "
+   echo "          - TOP    ${CROP[0]}"
+   echo "          - RIGHT  ${CROP[1]}"
+   echo "          - BOTTOM ${CROP[2]}"
+   echo "          - LEFT   ${CROP[3]}"
+}
+
+
+# read the options
+TEMP=`getopt -o t:l:i:o:c: --long start-time:,lenght:,input:,output:,crop: -- "$@"`
+eval set -- "$TEMP"
+
+# extract options and their arguments into variables.
+while true ; do
+    case "$1" in
+         -t|--start-time) INPUT_START_TIME=$2 ; shift 2 ;;
+         -l|--lenght) INPUT_TIME_LENGHT=$2 ; shift 2 ;;
+         -i|--input) INPUT_FILE=$2 ; shift 2 ;;
+         -o|--output) OUTPUT_FILE=$2 ; shift 2 ;;
+         -w|--width) WIDTH=$2 ; shift 2 ;;
+         -h|--width) HEIGHT=$2 ; shift 2 ;;
+         #-c|--crop) IFS=": " read -r -a CROP <<< $(sed -e 's/\"\|\[\|\]//g' <<<"$2") || outputError "tmc"; shift 2 ;;
+         -c|--crop) IFS=":, " read -r -a CROP <<< $2; shift 2 ;;
+         --) shift ; break ;;
+         *) inputParamError "Unknown parameter";; 
+ #       -s|--source)
+ #           case "$2" in
+ #               "") sourceDir='.' ; shift 2 ;;
+ #                *) sourceDir=$2 ; shift 2 ;;
+ #           esac ;;
+ #       -d|--destination)
+ #           destinationDir=$2 ; shift 2;;
+ #       -a|--action)
+ #           case "$2" in
+ #               "copy"|"move") action=$2 ; shift 2 ;;
+ #                           *) action="copy" ; shift 2 ;;
+ #           esac ;;
+
+    esac
+done
+
+[[ -z "$INPUT_FILE" ]] && INPUT_FILE=$1
+[[ -z "$OUTPUT_FILE" ]] && OUTPUT_FILE=$2
+[[ -z "$START_NUMBER" ]] && START_NUMBER=1
+[[ -z "${CROP[0]}" ]] && CROP[0]=$DEFAULT_TOP_CROP
+[[ -z "${CROP[1]}" ]] && CROP[1]=$DEFAULT_RIGHT_CROP
+[[ -z "${CROP[2]}" ]] && CROP[2]=$DEFAULT_BOTTOM_CROP
+[[ -z "${CROP[3]}" ]] && CROP[3]=$DEFAULT_LEFT_CROP
+
+outputParameters
+# Begin script in case all parameters are correct
+
+

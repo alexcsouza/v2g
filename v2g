@@ -82,19 +82,6 @@ while true ; do
          -c|--crop) IFS=":, " read -r -a CROP <<< $2; shift 2 ;;
          --) shift ; break ;;
          *) outputError "Unknown parameter" ; exit 1 ;; 
- #       -s|--source)
- #           case "$2" in
- #               "") sourceDir='.' ; shift 2 ;;
- #                *) sourceDir=$2 ; shift 2 ;;
- #           esac ;;
- #       -d|--destination)
- #           destinationDir=$2 ; shift 2;;
- #       -a|--action)
- #           case "$2" in
- #               "copy"|"move") action=$2 ; shift 2 ;;
- #                           *) action="copy" ; shift 2 ;;
- #           esac ;;
-
     esac
 done
 
@@ -132,10 +119,12 @@ ffmpeg -thread_queue_size 512 -loglevel warning -start_number $START_NUMBER -i "
 
 ffmpeg -thread_queue_size 512 -loglevel warning -start_number $START_NUMBER -i "$TEMP_DIR/frame-%d.png" -i "$TEMP_DIR/palette.png" -filter_complex "[0]crop=$CROP_STR,scale=$SCALE_STR:flags=lanczos [x]; [x][1:v] paletteuse" -y "$OUTPUT_FILE"
 
-# Removeing temporary folder after operation
+# Removing temporary folder after operation
 rm -rf $TEMP_DIR || outputWarning "Could't remove temporary folder: $TEMP_DIR" && outputInfo "Temporary folder removed: $TEMP_DIR"
 
+# Showing the result
 ffplay -loglevel quiet -loop -1 "$OUTPUT_FILE" &
+
 
 outputSuccess "Done! =)"
 

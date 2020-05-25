@@ -49,6 +49,16 @@ outputInfo(){
    echo -e $START_INFO_COLOR"> INFO:"$END_COLOR" $1"
 }
 
+shutdownFunction(){
+   # Removing temporary folder after operation
+   rm -rf $TEMP_DIR || outputWarning "Could't remove temporary folder: $TEMP_DIR" && outputInfo "Temporary folder removed: $TEMP_DIR"
+
+}
+
+showOutput(){
+   ffplay -loglevel quiet -loop -1 "$OUTPUT_FILE" &
+}
+
 outputParameters(){
    outputInfo "The folowing arguments was prossed by command to generate the file"
    echo "Start time...(-t): $INPUT_START_TIME"
@@ -109,22 +119,21 @@ CROP_STR="in_w-${CROP[1]}-${CROP[3]}:in_h-${CROP[2]}-${CROP[0]}:${CROP[3]}:${CRO
 outputWarning $CROP_STR
 SCALE_STR="$WIDTH:$HEIGHT"
 
-mkdir $TEMP_DIR || $(outputError "Could't create temporary folder $TEMP_DIR" && exit 1) && outputInfo "Diretório temporário criado."
+mkdir $TEMP_DIR || $(outputError "Could't create temporary folder $TEMP_DIR" ; shutdownFunction ; exit 1) && outputInfo "Temporary folder created."
 
-ffmpeg -thread_queue_size 512 -loglevel warning -ss $INPUT_START_TIME -t $INPUT_TIME_LENGHT -i $INPUT_FILE -vf "scale=$SCALE_STR:flags=lanczos,palettegen" -y "$TEMP_DIR/palette.png" || $("Could't create pallete" ; exit 1) && outputInfo "Pallete created."
+ffmpeg -thread_queue_size 512 -loglevel warning -ss $INPUT_START_TIME -t $INPUT_TIME_LENGHT -i "$INPUT_FILE" -vf "scale=$SCALE_STR:flags=lanczos,palettegen" -y "$TEMP_DIR/palette.png" || $(outputError "Could't create pallete." ; shutdownFunction; exit 1) && outputInfo "Pallete created."
 
-ffmpeg -thread_queue_size 512 -loglevel warning -ss $INPUT_START_TIME -t $INPUT_TIME_LENGHT -i $INPUT_FILE -i "$TEMP_DIR/palette.png" -lavfi "scale=$SCALE_STR:flags=lanczos [x]; [x][1:v] paletteuse" -y "$TEMP_DIR/frame-%d.png"
+ffmpeg -thread_queue_size 512 -loglevel warning -ss $INPUT_START_TIME -t $INPUT_TIME_LENGHT -i "$INPUT_FILE" -i "$TEMP_DIR/palette.png" -lavfi "scale=$SCALE_STR:flags=lanczos [x]; [x][1:v] paletteuse" -y "$TEMP_DIR/frame-%d.png" || $(outputError "Could't generate frames output." ; shutdownFunction ; exit 1) && outputInfo "Frames output created."
 
-ffmpeg -thread_queue_size 512 -loglevel warning -start_number $START_NUMBER -i "$TEMP_DIR/frame-%d.png" -filter_complex "crop=$CROP_STR,scale=$SCALE_STR:-1:flags=lanczos,palettegen" -y "$TEMP_DIR/palette.png"
+ffmpeg -thread_queue_size 512 -loglevel warning -start_number $START_NUMBER -i "$TEMP_DIR/frame-%d.png" -filter_complex "scale=$SCALE_STR:-1:flags=lanczos,crop=$CROP_STR,palettegen" -y "$TEMP_DIR/palette.png" || $(outputError "Could't create frames pallete." ; shutdownFunction ; exit 1) && outputInfo "Frame pallete created."
 
-ffmpeg -thread_queue_size 512 -loglevel warning -start_number $START_NUMBER -i "$TEMP_DIR/frame-%d.png" -i "$TEMP_DIR/palette.png" -filter_complex "[0]crop=$CROP_STR,scale=$SCALE_STR:flags=lanczos [x]; [x][1:v] paletteuse" -y "$OUTPUT_FILE"
+ffmpeg -thread_queue_size 512 -loglevel warning -start_number $START_NUMBER -i "$TEMP_DIR/frame-%d.png" -i "$TEMP_DIR/palette.png" -filter_complex "[0]scale=$SCALE_STR:flags=lanczos,crop=$CROP_STR [x]; [x][1:v] paletteuse" -y "$OUTPUT_FILE" || $(outputError "Could't create gif file." ; shutdownFunction ; exit 1) && outputInfo "Gif file created."
 
-# Removing temporary folder after operation
-rm -rf $TEMP_DIR || outputWarning "Could't remove temporary folder: $TEMP_DIR" && outputInfo "Temporary folder removed: $TEMP_DIR"
+# Excecuting procedures to clean the garbage and other necessary stuff
+shutdownFunction
 
 # Showing the result
-ffplay -loglevel quiet -loop -1 "$OUTPUT_FILE" &
-
+showOutput
 
 outputSuccess "Done! =)"
 
